@@ -1,25 +1,35 @@
 import React from 'react';
 import logo from './logo.svg';
-import './App.css';
+/* Pages */
+import Main from './pages/Main';
+import Search from './pages/Name';
+/* Mobile Pages */
+import MMain from './mobile-pages/Main';
+import MSearch from './mobile-pages/Name';
+/* Router */
+import {
+  Route,
+  Routes
+} from 'react-router-dom';
+/* Mobile detect */
+import { BrowserView, MobileView } from 'react-device-detect';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+  <>
+    <BrowserView>
+      <Routes>
+        <Route path="/" element={<Main />}/>
+        <Route path="/name/:name" element={<Search />}/>
+      </Routes>
+    </BrowserView>
+    <MobileView>
+      <Routes>
+        <Route path="/" element={<MMain />}/>
+        <Route path="/name/:name" element={<MSearch />}/>
+      </Routes>
+    </MobileView>
+  </>
   );
 }
 
