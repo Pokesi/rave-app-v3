@@ -83,7 +83,10 @@ const ActionButtonAgain = styled.button`
     height: calc(4.75vh);
     border: none;
     background-image: linear-gradient(330deg, #03045E, #0096C7);
-    width: 7.5vw;
+    ${props => `${ props.side ?
+      `width: calc(20vw - 4vh);
+       height: 9.5vh;` : 'width: 7.5vw;'
+    }`}
     cursor: pointer;
     margin-left: 2vh;
 `;
@@ -125,6 +128,7 @@ function App() {
     addresses: {}
   });
   const [ owner, setOwner ] = React.useState();
+  const [ isOwner, setIO ] = React.useState(false);
 
   React.useEffect(() => {
     const get = async () => {
@@ -132,6 +136,8 @@ function App() {
       const none = (JSON.parse(atob((await (uri(wallet)).generate(`None Set`)).split(';base64,')[1]))['image']);
       so((await ((new Rave()).isOwned(`${name}.ftm`)))[0]);
       setOwner((await ((contract(wallet)).getOwner(`${name}.ftm`))))
+      // @ts-ignore
+      try { setIO((await wallet.getAddress()) === owner); } catch (e) { console.warn('no signer'); }
       const a = (await ((contract(wallet)).getAvatar(`${name}.ftm`)));
       const ad = (await ((contract(wallet)).getAddresses(`${name}.ftm`)));
       console.log(a.length, `{${ad}}`);
@@ -174,14 +180,33 @@ function App() {
               <MoreWrapperSideBar width="20vw" height="12vw">
                 <ul>
                   <br/>
-                  <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</li></a>
+                  {owned ? <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</li></a> : <li>{name} is not owned</li>}
                 </ul>
+                {isOwner && <ActionButtonAgain onClick={() => {Swal.fire({
+                  title: `Transfer ${name}.ftm`,
+                  html: `This will transfer ALL ownership of the name ${name}.ftm. Be careful with this.<br><br>Learn more at our <a href='https://docs.rave.domains'>docs</a>.`,
+                  icon: 'info',
+                  input: 'text',
+                  inputAttributes: {
+                    autoCapitalize: 'off'
+                  },
+                  showDenyButton: true,
+                  showConfirmButton: true,
+                  confirmButtonText: 'Set!',
+                  denyButtonText: 'No thanks...'
+                }).then(async (result) => {
+                  if (result.isConfirmed) {
+                    contract(wallet).safeTransferFrom(owner, result.value, name).catch((e) => {
+                      console.error(e);
+                    });
+                  }
+                });}} side><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: `22px` }}>Transfer</p></ActionButtonAgain>}
               </MoreWrapperSideBar>
             </Stack>
             <DetailsWrapper>
               <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm details</Header>
               <Stack direction="row">
-                <MoreWrapper width="20vw" height="20vw">
+                <MoreWrapper width="calc(20vw + 2vh)" height="28vw">
                   <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
                     Avatar <ActionButtonAgain onClick={() => {
                       Swal.fire({
@@ -208,10 +233,10 @@ function App() {
                   <img src={data.avatar} style={{
                     margin: '0 2vh',
                     borderRadius: '17px',
-                    width: '12vw'
+                    width: '19vw'
                   }}/>
                 </MoreWrapper>
-                <MoreWrapper width="40vw" height="33vw">
+                <MoreWrapper width="24.5vw" height="33vw">
                   <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
                     Addresses <ActionButtonAgain onClick={() => {
                       Swal.fire({
@@ -271,7 +296,7 @@ function App() {
                         borderRadius: '15px',
                         padding: '2vh 4vh',
                         fontFamily: 'Nunito Sans',
-                        width: '65%',
+                        width: '22.5vw',
                         fontSize: '19px'}}
                         onClick={() => {
                           /* @ts-ignore */
