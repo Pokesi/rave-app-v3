@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { css } from 'styled-components';
 import Typewriter from 'typewriter-effect';
 import { Typography, Input, CancelCircleSVG } from '@ensdomains/thorin';
-import { Stack, Tooltip } from '@mui/material';
+import { Stack, Tooltip, Skeleton } from '@mui/material';
 import NavBar from '../../components/NavBar';
 import '../../global.css';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -51,13 +51,14 @@ const Wrapper = styled.div`
 `;
 
 const DetailsWrapper = styled.div`
-    margin-left: 2vh;
+    margin-left: 1vh;
     margin-right: 2vh;
     border-radius: 17px;
     margin-top: 1vh;
     background-color: rgba(0,0,0,0.2);
     padding-bottom: 2vh;
-    min-width: calc(100vw - 4vh - 2vh - 2vh - 20vw - 4vh);
+    min-width: calc(100vw - 4vh - 2vh - 2vh - 20vw - 4vh - 2vh);
+    height: calc(100%);
 `;
 
 const Header = styled.h1`
@@ -82,11 +83,14 @@ const ActionButtonAgain = styled.button`
     border-radius: 12px;
     height: calc(4.75vh);
     border: none;
-    background-image: linear-gradient(330deg, #03045E, #0096C7);
-    ${props => `${ props.side ?
-      `width: calc(20vw - 4vh);
-       height: 9.5vh;` : 'width: 7.5vw;'
-    }`}
+    ${props => `${
+      props.side ?
+        `width: calc(20vw - 4vh);
+       height: 9.5vh;` : 'width: 7.5vw;'}
+    ${props.tab ?
+      `background-color: rgba(0,0,0,0.3);
+      margin-top: 2vh;
+      height: 4.75vh;`: 'background-image: linear-gradient(330deg, #03045E, #0096C7);'}`}
     cursor: pointer;
     margin-left: 2vh;
 `;
@@ -127,11 +131,21 @@ function App() {
     avatar: "https://rave.domains/RaveBase.png",
     addresses: {}
   });
-  const [ owner, setOwner ] = React.useState();
+  const [ owner, setOwner ] = React.useState<any>();
   const [ isOwner, setIO ] = React.useState(false);
+  const [ tab, setTab ] = React.useState<number>(0);
+  const [ tokenId, setT ] = React.useState<number>(-1);
+  const [ loading, setLoading ] = React.useState<boolean>(false);
 
   React.useEffect(() => {
+    setLoading(false);
     const get = async () => {
+      sss('');
+      so(false);
+      setOwner('');
+      setIO(false);
+      setTab(0);
+      setT(-1);
       sss(JSON.parse(atob((await (uri(wallet)).generate(`${name}.ftm`)).split(';base64,')[1]))['image']);
       const none = (JSON.parse(atob((await (uri(wallet)).generate(`None Set`)).split(';base64,')[1]))['image']);
       so((await ((new Rave()).isOwned(`${name}.ftm`)))[0]);
@@ -140,13 +154,22 @@ function App() {
       try { setIO((await wallet.getAddress()) === owner); } catch (e) { console.warn('no signer'); }
       const a = (await ((contract(wallet)).getAvatar(`${name}.ftm`)));
       const ad = (await ((contract(wallet)).getAddresses(`${name}.ftm`)));
-      console.log(a.length, `{${ad}}`);
       setData({
         avatar:  (a.length > 0) ? (a) : none,
         addresses: JSON.parse((ad.length > 0) ? (ad) : "{}"),
-      })
+      });
+      try { const ownednames = (await (contract(wallet)).getNames(owner));
+      console.log(ownednames);
+      const indexOfName = ownednames.indexOf(`${name}.ftm`);
+      console.log(indexOfName);
+      const tokenId = (await (contract(wallet)).tokenOfOwnerByIndex(owner, indexOfName));
+      console.log(tokenId);
+      setT(tokenId); } catch (e) { console.warn('failed to fetch tokenId', e) }
+      console.log('done')
     }
-    get();
+    get().then(() => {
+      setLoading(true);
+    });
   }, [wallet, name])
 
   return (
@@ -159,7 +182,7 @@ function App() {
       }}>
         <NavBar />
         <Wrapper id={`rave--name-${name}`}>
-        <Stack direction="row">
+          {(loading) ? <Stack direction="row">
             <Stack>
               <img src={src} style={{
                 margin: '2vh 2vh',
@@ -180,7 +203,7 @@ function App() {
               <MoreWrapperSideBar width="20vw" height="12vw">
                 <ul>
                   <br/>
-                  {owned ? <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</li></a> : <li>{name} is not owned</li>}
+                  {owned ? <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</li></a> : <li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>{name} is not owned</li>}
                 </ul>
                 {isOwner && <ActionButtonAgain onClick={() => {Swal.fire({
                   title: `Transfer ${name}.ftm`,
@@ -203,121 +226,128 @@ function App() {
                 });}} side><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: `22px` }}>Transfer</p></ActionButtonAgain>}
               </MoreWrapperSideBar>
             </Stack>
-            <DetailsWrapper>
-              <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm details</Header>
-              <Stack direction="row">
-                <MoreWrapper width="calc(20vw + 2vh)" height="28vw">
-                  <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
-                    Avatar <ActionButtonAgain onClick={() => {
-                      Swal.fire({
-                        title: `Set an avatar for ${name}.ftm`,
-                        html: `You must enter a link, containing your avatar. <br><br>This link should be in .png or .jpg form.<br><br>Learn more at our <a href='https://docs.rave.domains/'>docs</a>.`,
-                        icon: 'info',
-                        input: 'text',
-                        inputAttributes: {
-                          autoCapitalize: 'off'
-                        },
-                        showDenyButton: true,
-                        showConfirmButton: true,
-                        confirmButtonText: 'Set!',
-                        denyButtonText: 'No thanks...'
-                      }).then(async (result) => {
-                        if (result.isConfirmed) {
-                          (contract(wallet)).setAvatar(`${name}.ftm`, result.value).catch((e) => {
-                            console.error(e);
-                          });
-                        }
-                      });
-                    }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Set</ActionButtonAgain>
-                  </Header>
-                  <img src={data.avatar} style={{
-                    margin: '0 2vh',
-                    borderRadius: '17px',
-                    width: '19vw'
-                  }}/>
-                </MoreWrapper>
-                <MoreWrapper width="24.5vw" height="33vw">
-                  <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
-                    Addresses <ActionButtonAgain onClick={() => {
-                      Swal.fire({
-                        title: 'Set wallet addresses for different chains.',
-                        confirmButtonText: 'Set!',
-                        denyButtonText: 'No Thanks...',
-                        showDenyButton: true,
-                        showConfirmButton: true,
-                        html:
-                          '<p>Input your wallet addresses for different blockchains here, and have them stored on-chain! You can leave some fields blank. <br />' +
-                          '<input id="btc" placeholder="Bitcoin" class="swal2-input">' +
-                          '<input id="eth" placeholder="Ethereum" class="swal2-input">' +
-                          '<input id="bch" placeholder="Bitcoin Cash" class="swal2-input">' +
-                          '<input id="ltc" placeholder="Litecoin" class="swal2-input">' +
-                          '<input id="xrp" placeholder="Ripple" class="swal2-input">' +
-                          '<input id="avax" placeholder="Avalanche C-Chain" class="swal2-input">' +
-                          '<input id="bnb" placeholder="BNB on BSC" class="swal2-input">' +
-                          '<input id="luna" placeholder="Terra LUNA" class="swal2-input">' +
-                          '<input id="near" placeholder="Near" class="swal2-input">' +
-                          '<input id="atom" placeholder="Cosmos" class="swal2-input">',
-                        preConfirm: function () {
-                          return new Promise(function (resolve) {
-                            resolve({
-                              btc: $('#btc').val(),
-                              eth: $('#eth').val(),
-                              bch: $('#bch').val(),
-                              ltc: $('#ltc').val(),
-                              xrp: $('#xrp').val(),
-                              avax: $('#avax').val(),
-                              bnb: $('#bnb').val(),
-                              luna: $('#luna').val(),
-                              near: $('#near').val(),
-                              atom: $('#atom').val(),
-                            })
-                          })
-                        },
-                      }).then(async (result) => {
-                        if (result.isConfirmed) {
-                          (contract(wallet)).setAddresses(`${name}.ftm`, JSON.stringify(result.value)).catch((e) => {
-                            console.error(e);
-                          });
-                        }
-                      })
-                    }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Set</ActionButtonAgain>
-                  </Header>
-                  <Grid gap={2} style={{
-                    alignItems: "center",
-                    alignSelf: "center",
-                    textAlign: "center",
-                    marginLeft: '2vh' }}>
-                    {Object.entries(data.addresses).map( function (item, key) {
-                      return <>{(item[1] !== "") && <Tooltip title={`Click to copy`}><button style={{
-                        border: 'none',
-                        background: 'rgba(0,0,0,0.2)',
-                        color: '#FFF',
-                        cursor: 'pointer',
-                        borderRadius: '15px',
-                        padding: '2vh 4vh',
-                        fontFamily: 'Nunito Sans',
-                        width: '22.5vw',
-                        fontSize: '19px'}}
-                        onClick={() => {
-                          /* @ts-ignore */
-                          navigator.clipboard.writeText(item[1])
-                        }}>
-                        <Stack spacing={2} direction='row'>
-                          {/* @ts-ignore */}
-                          <img src={addressKeys[item[0]]} alt={`${item[0]}`} style={{
-                            height: '27px',
-                            width: '27px'
-                          }}/>
-                          {/* @ts-ignore */}
-                          <p>{truncateAddress(item[1])}</p>
-                        </Stack>
-                      </button></Tooltip>}</>
-                    })}
-                  </Grid>
-                </MoreWrapper>
+            <Stack direction="column">
+              <Stack direction="row" style={{ justifyContent: 'center' }}>
+                <ActionButtonAgain tab onClick={() => setTab(0)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px' }}>Details</p></ActionButtonAgain>
+                <Tooltip title="Soon!"><ActionButtonAgain tab onClick={() => setTab(1)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Settings</p></ActionButtonAgain></Tooltip>
+                <Tooltip title={(tokenId === -1) ? "Token ID not fetched" : "Sell on PaintSwap"}><a href={`https://paintswap.finance/marketplace/assets/0x14ffd1fa75491595c6fd22de8218738525892101/${tokenId}`} style={{ textDecoration: 'none' }}><ActionButtonAgain tab><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Sell</p></ActionButtonAgain></a></Tooltip>
               </Stack>
-            </DetailsWrapper>
-          </Stack>
+              <DetailsWrapper>
+                <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm details</Header>
+                <Stack direction="row">
+                  <MoreWrapper width="calc(20vw + 2vh)" height="28vw">
+                    <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
+                      Avatar <ActionButtonAgain onClick={() => {
+                        Swal.fire({
+                          title: `Set an avatar for ${name}.ftm`,
+                          html: `You must enter a link, containing your avatar. <br><br>This link should be in .png or .jpg form.<br><br>Learn more at our <a href='https://docs.rave.domains/'>docs</a>.`,
+                          icon: 'info',
+                          input: 'text',
+                          inputAttributes: {
+                            autoCapitalize: 'off'
+                          },
+                          showDenyButton: true,
+                          showConfirmButton: true,
+                          confirmButtonText: 'Set!',
+                          denyButtonText: 'No thanks...'
+                        }).then(async (result) => {
+                          if (result.isConfirmed) {
+                            (contract(wallet)).setAvatar(`${name}.ftm`, result.value).catch((e) => {
+                              console.error(e);
+                            });
+                          }
+                        });
+                      }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Set</ActionButtonAgain>
+                    </Header>
+                    <img src={data.avatar} style={{
+                      margin: '0 2vh',
+                      borderRadius: '17px',
+                      width: '19vw'
+                    }}/>
+                  </MoreWrapper>
+                  <MoreWrapper width="24.5vw" height="33vw">
+                    <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
+                      Addresses <ActionButtonAgain onClick={() => {
+                        Swal.fire({
+                          title: 'Set wallet addresses for different chains.',
+                          confirmButtonText: 'Set!',
+                          denyButtonText: 'No Thanks...',
+                          showDenyButton: true,
+                          showConfirmButton: true,
+                          html:
+                            '<p>Input your wallet addresses for different blockchains here, and have them stored on-chain! You can leave some fields blank. <br />' +
+                            '<input id="btc" placeholder="Bitcoin" class="swal2-input">' +
+                            '<input id="eth" placeholder="Ethereum" class="swal2-input">' +
+                            '<input id="bch" placeholder="Bitcoin Cash" class="swal2-input">' +
+                            '<input id="ltc" placeholder="Litecoin" class="swal2-input">' +
+                            '<input id="xrp" placeholder="Ripple" class="swal2-input">' +
+                            '<input id="avax" placeholder="Avalanche C-Chain" class="swal2-input">' +
+                            '<input id="bnb" placeholder="BNB on BSC" class="swal2-input">' +
+                            '<input id="luna" placeholder="Terra LUNA" class="swal2-input">' +
+                            '<input id="near" placeholder="Near" class="swal2-input">' +
+                            '<input id="atom" placeholder="Cosmos" class="swal2-input">',
+                          preConfirm: function () {
+                            return new Promise(function (resolve) {
+                              resolve({
+                                btc: $('#btc').val(),
+                                eth: $('#eth').val(),
+                                bch: $('#bch').val(),
+                                ltc: $('#ltc').val(),
+                                xrp: $('#xrp').val(),
+                                avax: $('#avax').val(),
+                                bnb: $('#bnb').val(),
+                                luna: $('#luna').val(),
+                                near: $('#near').val(),
+                                atom: $('#atom').val(),
+                              })
+                            })
+                          },
+                        }).then(async (result) => {
+                          if (result.isConfirmed) {
+                            (contract(wallet)).setAddresses(`${name}.ftm`, JSON.stringify(result.value)).catch((e) => {
+                              console.error(e);
+                            });
+                          }
+                        })
+                      }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Set</ActionButtonAgain>
+                    </Header>
+                    <Grid gap={2} style={{
+                      alignItems: "center",
+                      alignSelf: "center",
+                      textAlign: "center",
+                      marginLeft: '2vh' }}>
+                      {Object.entries(data.addresses).map( function (item, key) {
+                        return <>{(item[1] !== "") && <Tooltip title={`Click to copy`}><button style={{
+                          border: 'none',
+                          background: 'rgba(0,0,0,0.2)',
+                          color: '#FFF',
+                          cursor: 'pointer',
+                          borderRadius: '15px',
+                          padding: '2vh 4vh',
+                          fontFamily: 'Nunito Sans',
+                          width: '22.5vw',
+                          fontSize: '19px'}}
+                          onClick={() => {
+                            /* @ts-ignore */
+                            navigator.clipboard.writeText(item[1])
+                          }}>
+                          <Stack spacing={2} direction='row'>
+                            {/* @ts-ignore */}
+                            <img src={addressKeys[item[0]]} alt={`${item[0]}`} style={{
+                              height: '27px',
+                              width: '27px'
+                            }}/>
+                            {/* @ts-ignore */}
+                            <p>{truncateAddress(item[1])}</p>
+                          </Stack>
+                        </button></Tooltip>}</>
+                      })}
+                    </Grid>
+                  </MoreWrapper>
+                </Stack>
+              </DetailsWrapper>
+            </Stack>
+          </Stack> : <Stack direction="row"><Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm Loading...</Header><Skeleton animation='wave' variant="rounded" width='100%' height='100%' /></Stack>}
         </Wrapper>
       </Stack>
     </walletContext.Provider>

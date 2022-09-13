@@ -98,7 +98,7 @@ function App() {
   <Wrapper>
     <Stack>
       <Wrapper inner>
-        <GradientTitle>
+        <GradientTitle id="rave--title">
           {'Welcome to '}
           <GradientBG>
             <Typewriter
@@ -127,6 +127,18 @@ function App() {
     <Desc />
     {/*<Gallery />*/}
     <Integrations />
+    <a href="#rave--title"><button style={{
+      border: 'none',
+      background: '#272727',
+      color: '#FFF',
+      cursor: 'pointer',
+      borderRadius: '15px',
+      padding: '2vh 4vh',
+      marginTop: '2vh',
+      marginBottom: '2vh',
+      fontFamily: 'Nunito Sans',
+      fontSize: '21px'
+    }}><b>Find a name!</b></button></a>
     <br />
   </Wrapper>
 </div>
