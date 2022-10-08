@@ -5,8 +5,10 @@ import { Typography, Input, CancelCircleSVG } from '@ensdomains/thorin';
 import { Stack } from '@mui/material';
 import { normaliseName } from '../../components/SearchBar';
 import '../../global.css';
+import './navbar.css';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { walletContext } from '../../pages/Name';
+import { walletContext as wcm } from '../../pages0/Name';
 import { ethers } from 'ethers';
 import { truncateAddress } from '../../utils/addressManip';
 
@@ -17,7 +19,9 @@ const SearchInputWrapperN = styled.input`
     border-width: 0px;
     border-color: #282c34;
     width: 100%;
-    max-width: 70%;
+    ${props =>
+      `${props.mobile ? `width: 90vw;` : `max-width: 70%;`}`
+    }
     margin-top: 2vh;
     background-color: rgba(0,0,0,0.2);
     background-opacity: 10%;
@@ -48,11 +52,13 @@ const SearchInputWrapperN = styled.input`
 const Search = ({
   input,
   setInput,
-  history
+  history,
+  mobile = false
 }:{
   input: string,
   setInput: React.Dispatch<React.SetStateAction<string>>,
   history: any,
+  mobile?: boolean,
 }) => {
   return <SearchInputWrapperN
       value={input}
@@ -64,6 +70,7 @@ const Search = ({
         if (e.keyCode === 13)
           history(`../name/${input}`)
       }}
+      mobile
     />
 }
 
@@ -78,7 +85,7 @@ const LinkButton = styled.button`
     border: none;
     background-color: rgba(0,0,0,0.2);
     background-opacity: 10%;
-    width: 7.5vw;
+    ${props => `width: ${props.mobile ? '90vw' : '7.5vw'};`}
     cursor: pointer;
     margin-left: 2vw;
 `;
@@ -86,21 +93,27 @@ const LinkButton = styled.button`
 const ConnectButton = styled.button`
     border-radius: 17px;
     height: calc(9.75vh);
-    margin-top: 1.25vh;
     border: none;
     background-image: linear-gradient(330deg, #03045E, #0096C7);
-    width: 15vw;
+    ${props => `width: ${props.mobile ? '90vw' : '20vw'};
+    ${props.mobile ? '' : 'margin-top: 1.25vh;'}`}
     cursor: pointer;
     margin-left: 2vw;
     margin-right: 2vh;
 `;
 
-function App() {
+function App({
+  homePage = false,
+  mobile = false
+}:{
+  homePage?: boolean,
+  mobile?: boolean,
+}) {
   const [ searchInput, setSInput ] = React.useState('');
   const [ address, setAddress ] = React.useState('');
   const history = useNavigate();
   let { name } = useParams();
-  const { wallet, setWallet } = React.useContext(walletContext);
+  const { wallet, setWallet } = React.useContext(mobile ? wcm : walletContext);
 
   const connectWallet = async () => {
     // @ts-ignore
@@ -130,13 +143,25 @@ function App() {
     setAddress(account);
   };
 
+  if (mobile) {
+    return (
+      <Wrapper className={homePage ? 'Nav' : ''}>
+        <Stack direction="column">
+          <Link to="/"><LinkButton mobile><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px' }}>Home</p></LinkButton></Link>
+          <Search input={searchInput} setInput={setSInput} history={history} mobile/>
+          <ConnectButton mobile onClick={() => {if (address) { setWallet(new ethers.providers.JsonRpcProvider('https://rpc.ftm.tools')); setAddress('') } else { connectWallet() }}}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: address ? '16px' : '18px' }}>{address ? truncateAddress(address) : "Connect Wallet"}</p></ConnectButton>
+        </Stack>
+      </Wrapper>
+    )
+  }
+
   return (
-    <Wrapper>
+    <Wrapper className={homePage ? 'Nav' : ''}>
       <Stack direction="row">
         <Link to="/"><img src="https://rave.domains/RaveBase.png" style={{height: '9.5vh', marginTop: '1.25vh'}}/></Link>
-        <Link to="/"><LinkButton><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Home</p></LinkButton></Link>
+        <Link to="/"><LinkButton><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '20px' }}>Home</p></LinkButton></Link>
         <Search input={searchInput} setInput={setSInput} history={history} />
-        <ConnectButton onClick={() => {if (address) { setWallet(new ethers.providers.JsonRpcProvider('https://rpc.ftm.tools')); setAddress('') } else { connectWallet() }}}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: address ? '18px' : '22px' }}>{address ? truncateAddress(address) : "Connect Wallet"}</p></ConnectButton>
+        <ConnectButton onClick={() => {if (address) { setWallet(new ethers.providers.JsonRpcProvider('https://rpc.ftm.tools')); setAddress('') } else { connectWallet() }}}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: address ? '16px' : '20px' }}>{address ? truncateAddress(address) : "Connect Wallet"}</p></ConnectButton>
       </Stack>
     </Wrapper>
   )

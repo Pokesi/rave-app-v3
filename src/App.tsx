@@ -4,8 +4,8 @@ import logo from './logo.svg';
 import Main from './pages/Main';
 import Search from './pages/Name';
 /* Mobile Pages */
-import MMain from './mobile-pages/Main';
-import MSearch from './mobile-pages/Name';
+import MMain from './pages0/Main';
+import MSearch from './pages0/Name';
 /* Router */
 import {
   Route,

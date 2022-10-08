@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components';
 import Typewriter from 'typewriter-effect';
 import { Typography, Input, CancelCircleSVG } from '@ensdomains/thorin';
 import { Stack } from '@mui/material';
-import { SearchComponent } from '../../components/SearchBar';
+import { SearchComponentMobile as SearchComponent } from '../../components/SearchBar';
 import '../../global.css';
 // @ts-ignore
 import $ from 'jquery';
@@ -25,7 +25,6 @@ const GradientBG = styled.p`
     padding: 0 8px;
     border-radius: 8.8px;
     margin-top: 0vh;
-    font-size: 72px;
   `;
 
 const Description = styled.p`
@@ -43,7 +42,7 @@ const GradientTitle = styled.h1`
     background-clip: text;
     color: white;
     margin: 0px;
-    font-size: 64px;
+    font-size: 32px;
   `;
 
 const SubtitleWrapper = styled.div`
@@ -55,8 +54,8 @@ const SubtitleWrapper = styled.div`
     -webkit-background-clip: text;
     background-clip: text;
     color: white;
-    margin-top: 0px;
-    font-size: 32px;
+    font-size: 20px;
+    margin-left: -10px;
   `;
 
 const Wrapper = styled.div`
@@ -68,6 +67,7 @@ const Wrapper = styled.div`
       props.inner ? (`
          max-width: 85%;
          padding-top: 3vh;
+         margin-left: -10px;
       `) : (`
          min-width: 100%;
          padding-top: 7vh;
@@ -96,27 +96,14 @@ function App() {
   document.title = `Rave Names - The cheapest web3 usernames`
 
   return (
-<div className="App">
+<div className="">
   <Wrapper>
     <Stack>
       <Wrapper inner>
         <GradientTitle id="rave--title">
           {'Welcome to '}
           <GradientBG>
-            <Typewriter
-              onInit={(typewriter: any | null) => {
-                typewriter
-                .typeString(' the cheapest registration fees in crypto')
-                .pauseFor(2000)
-                .deleteChars(40)
-                .typeString('no renewal fees')
-                .pauseFor(2000)
-                .deleteChars(15)
-                .typeString('Rave Names')
-                .pauseFor(2000) // this isnt rly needed but just for less editing if we ever need more here
-                .start()
-              }}
-            />
+            {'Rave Names'}
           </GradientBG>
         </GradientTitle>
       </Wrapper>

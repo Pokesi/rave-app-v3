@@ -90,9 +90,11 @@ const ActionButtonAgain = styled.button`
     ${props.tab ?
       `background-color: rgba(0,0,0,0.3);
       margin-top: 2vh;
-      height: 4.75vh;`: 'background-image: linear-gradient(330deg, #03045E, #0096C7);'}`}
+      height: 4.75vh;`: 'background-image: linear-gradient(330deg, #03045E, #0096C7);'}
+    `}
     cursor: pointer;
     margin-left: 2vh;
+    padding-top: -2vh;
 `;
 
 const MoreWrapper = styled.div`
@@ -103,6 +105,7 @@ const MoreWrapper = styled.div`
   `}
   margin-left: 2vw;
   border-radius: 17px;
+  margin-bottom: 2vh;
 `;
 
 const MoreWrapperSideBar = styled.div`
@@ -173,9 +176,13 @@ function App() {
         addresses: JSON.parse((ad.length > 0) ? (ad) : "{}"),
       });
       try { const ownednames = (await (contract(wallet)).getNames(owner));
+      console.log(ownednames);
       const indexOfName = ownednames.indexOf(`${name}.ftm`);
+      console.log(indexOfName);
       const tokenId = (await (contract(wallet)).tokenOfOwnerByIndex(owner, indexOfName));
+      console.log(tokenId);
       setT(tokenId); } catch (e) { console.warn('failed to fetch tokenId', e) }
+      console.log('done')
     }
     get().then(() => {
       setLoading(true);
@@ -192,14 +199,14 @@ function App() {
       <Stack style={{
         minHeight: '100vh'
       }}>
-        <NavBar />
+        <NavBar mobile/>
         <Wrapper id={`rave--name-${name}`}>
-          {(loading) ? <Stack direction="row">
+          {(!loading) ? <Stack direction="column">
             <Stack>
               <img src={src} style={{
                 margin: '2vh 2vh',
                 borderRadius: '17px',
-                width: '20vw'
+                width: 'calc(100% - 4vh)'
               }}/>
               <div>
                 <ActionButton
@@ -208,15 +215,17 @@ function App() {
                   }) : (() => {
                     //
                   })}
+                  style={{
+                    width: 'calc(100% - 4vh)'
+                  }}
                 >
                   <p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: `${owned ? '16px' : '22px'}` }}>{owned ? `${name}.ftm is owned` : `Register ${`${name}.ftm`}`}</p>
                 </ActionButton>
               </div>
-              <MoreWrapperSideBar width="20vw" height="12vw">
-                <ul>
-                  <br/>
-                  {owned ? <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</li></a> : <li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>{name} is not owned</li>}
-                </ul>
+              <MoreWrapperSideBar width="calc(100% - 6vh)" height="10vh" style={{
+                paddingLeft: '2vh',
+              }}>
+                {owned ? <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</p></a> : <p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>{name} is not owned</p>}
                 {isOwner && <ActionButtonAgain onClick={() => {Swal.fire({
                   title: `Transfer ${name}.ftm`,
                   html: `This will transfer ALL ownership of the name ${name}.ftm. Be careful with this.<br><br>Learn more at our <a href='https://docs.rave.domains'>docs</a>.`,
@@ -239,15 +248,15 @@ function App() {
               </MoreWrapperSideBar>
             </Stack>
             <Stack direction="column">
-              <Stack direction="row" style={{ justifyContent: 'center' }}>
-                <ActionButtonAgain tab onClick={() => setTab(0)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px' }}>Details</p></ActionButtonAgain>
-                <Tooltip title="Soon!"><ActionButtonAgain tab onClick={() => setTab(1)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Records</p></ActionButtonAgain></Tooltip>
-                <Tooltip title={(tokenId === -1) ? "Token ID not fetched" : "Sell on PaintSwap"}><a href={`https://paintswap.finance/marketplace/assets/0x14ffd1fa75491595c6fd22de8218738525892101/${tokenId}`} style={{ textDecoration: 'none' }}><ActionButtonAgain tab><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Sell</p></ActionButtonAgain></a></Tooltip>
+              <Stack direction="row" style={{ justifyContent: 'center', width: 'calc(100% - 4vh)' }}>
+                <ActionButtonAgain tab onClick={() => setTab(0)} style={{ width: 'calc(33vw - 4vh)'}}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px' }}>Details</p></ActionButtonAgain>
+                <Tooltip title="Soon!"><ActionButtonAgain tab onClick={() => setTab(1)} style={{ width: 'calc(33vw - 4vh)'}}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Records</p></ActionButtonAgain></Tooltip>
+                <Tooltip title={(tokenId === -1) ? "Token ID not fetched" : "Sell on PaintSwap"} style={{ width: '3px'}}><a href={`https://paintswap.finance/marketplace/assets/0x14ffd1fa75491595c6fd22de8218738525892101/${tokenId}`} style={{ textDecoration: 'none' }}><ActionButtonAgain tab  style={{ width: 'calc(33vw - 4vh)'}}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Sell</p></ActionButtonAgain></a></Tooltip>
               </Stack>
               <DetailsWrapper>
                 <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm details</Header>
-                <Stack direction="row">
-                  <MoreWrapper width="calc(20vw + 2vh)" height="28vw">
+                <Stack direction="column">
+                  <MoreWrapper width="calc(100vw - 10vh)" height="calc(70vw + 10vh)">
                     <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
                       Avatar <ActionButtonAgain onClick={() => {
                         Swal.fire({
@@ -269,7 +278,7 @@ function App() {
                             });
                           }
                         });
-                      }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Set</ActionButtonAgain>
+                      }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '17px', width: '20vw' }}>Set</ActionButtonAgain>
                     </Header>
                     <img src={data.avatar} style={{
                       margin: '0 2vh',
@@ -277,7 +286,7 @@ function App() {
                       width: '19vw'
                     }}/>
                   </MoreWrapper>
-                  <MoreWrapper width="28vw" height="33vw">
+                  <MoreWrapper width="calc(100vw - 10vh)" height="calc(140vw + 10vh)">
                     <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }} sub>
                       Addresses <ActionButtonAgain onClick={() => {
                         Swal.fire({
@@ -321,7 +330,7 @@ function App() {
                             });
                           }
                         })
-                      }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '22px' }}>Set</ActionButtonAgain>
+                      }} style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '17px', width: '20vw'}}>Set</ActionButtonAgain>
                     </Header>
                     <Grid gap={2} style={{
                       alignItems: "center",
@@ -359,7 +368,7 @@ function App() {
                 </Stack>
               </DetailsWrapper>
             </Stack>
-          </Stack> : <Stack direction="row"><Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', width: '50%' }}>{name}.ftm Loading...</Header><Skeleton animation='wave' variant="rounded" width='100%' height='100%' /></Stack>}
+          </Stack> : <Stack direction="row"><Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', width: '100%', fontSize: '23px' }}>{name}.ftm Loading...</Header><Skeleton animation='wave' variant="rounded" width='100%' height='100%' /></Stack>}
         </Wrapper>
       </Stack>
     </walletContext.Provider>

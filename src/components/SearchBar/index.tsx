@@ -17,13 +17,13 @@ export const SearchInputWrapper = styled.input`
     background-opacity: 10%;
     /* ----- */
     height: 12.5vh;
-    padding: 12px 20px;
     padding-block-start: 20px;
     padding-block-end: 20px;
     padding-right: 26%;
     padding-left: 5vh;
     ${props =>`
-      ${props.mobile ? `font-size: 21px;` : `font-size: 36px;`}
+      ${props.mobile ? `font-size: 18px;` : `font-size: 36px;`}
+      ${props.mobile ? `padding: 5px 18px;` : `padding: 12px 20px;`}
     `}
     margin: 8px 0;
     margin-right: 8px;
