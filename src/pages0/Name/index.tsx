@@ -201,7 +201,7 @@ function App() {
       }}>
         <NavBar mobile/>
         <Wrapper id={`rave--name-${name}`}>
-          {(!loading) ? <Stack direction="column">
+          {(loading) ? <Stack direction="column">
             <Stack>
               <img src={src} style={{
                 margin: '2vh 2vh',
