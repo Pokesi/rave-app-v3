@@ -283,7 +283,7 @@ function App() {
                     <img src={data.avatar} style={{
                       margin: '0 2vh',
                       borderRadius: '17px',
-                      width: '19vw'
+                      width: '50vw'
                     }}/>
                   </MoreWrapper>
                   <MoreWrapper width="calc(100vw - 10vh)" height="calc(140vw + 10vh)">
