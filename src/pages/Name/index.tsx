@@ -9,9 +9,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { create as uri } from '../../utils/uri';
 import { create as contract } from '../../utils/contract';
+import { create as external } from '../../utils/external';
 import { Rave } from '@rave-names/rave';
 import { truncateAddress } from '../../utils/addressManip';
 import { Grid } from 'theme-ui';
+import { Records } from './Records';
 import Swal from 'sweetalert2';
 
 const addressKeys = {
@@ -144,7 +146,7 @@ function App() {
     avatar: "https://rave.domains/RaveBase.png",
     addresses: {}
   });
-  const [ owner, setOwner ] = React.useState<any>();
+  const [ owner, setOwner ] = React.useState<string>();
   const [ isOwner, setIO ] = React.useState(false);
   const [ tab, setTab ] = React.useState<number>(0);
   const [ tokenId, setT ] = React.useState<number>(-1);
@@ -172,10 +174,16 @@ function App() {
         avatar:  (a.length > 0) ? (a) : none,
         addresses: JSON.parse((ad.length > 0) ? (ad) : "{}"),
       });
-      try { const ownednames = (await (contract(wallet)).getNames(owner));
-      const indexOfName = ownednames.indexOf(`${name}.ftm`);
-      const tokenId = (await (contract(wallet)).tokenOfOwnerByIndex(owner, indexOfName));
-      setT(tokenId); } catch (e) { console.warn('failed to fetch tokenId', e) }
+      try {
+        if (typeof owner !== "undefined") {
+          const ownednames = (await (contract(wallet)).getNames(owner));
+          const indexOfName = ownednames.indexOf(`${name}.ftm`);
+          const tokenId = (await (contract(wallet)).tokenOfOwnerByIndex(owner, indexOfName));
+          setT(tokenId);
+        }
+      } catch (e) {
+        console.warn('failed to fetch tokenId', e);
+      }
     }
     get().then(() => {
       setLoading(true);
@@ -183,6 +191,83 @@ function App() {
   }, [wallet, name]);
 
   document.title = `${name}.ftm | Rave Names - The cheapest web3 usernames`;
+
+  if (tab === 1) {
+    return (
+      <walletContext.Provider value={{
+        wallet: wallet,
+        setWallet: setWallet
+      }}>
+        <Stack style={{
+          minHeight: '100vh'
+        }}>
+          <NavBar />
+          <Wrapper id={`rave--name-${name}`}>
+            {(loading) ? <Stack direction="row">
+              <Stack>
+                <img src={src} style={{
+                  margin: '2vh 2vh',
+                  borderRadius: '17px',
+                  width: '20vw'
+                }}/>
+                <div>
+                  <ActionButton
+                    onClick={(!owned) ? (() => {
+                      (new Rave()).registerName(name, wallet, ethers.utils.parseEther('5'))
+                    }) : (() => {
+                      //
+                    })}
+                  >
+                    <p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: `${owned ? '16px' : '22px'}` }}>{owned ? `${name}.ftm is owned` : `Register ${`${name}.ftm`}`}</p>
+                  </ActionButton>
+                </div>
+                <MoreWrapperSideBar width="20vw" height="12vw">
+                  <ul>
+                    <br/>
+                    {owned ? <a href={`https://ftmscan.com/address/${owner || "0x0"}`} style={{ textDecoration: 'none' }}><li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>Owned by {owner ? truncateAddress(owner) : 'N/A'}</li></a> : <li style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '18px', listStyleType: 'none' }}>{name} is not owned</li>}
+                  </ul>
+                  {isOwner && <ActionButtonAgain onClick={() => {Swal.fire({
+                    title: `Transfer ${name}.ftm`,
+                    html: `This will transfer ALL ownership of the name ${name}.ftm. Be careful with this.<br><br>Learn more at our <a href='https://docs.rave.domains'>docs</a>.`,
+                    icon: 'info',
+                    input: 'text',
+                    inputAttributes: {
+                      autoCapitalize: 'off'
+                    },
+                    showDenyButton: true,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Set!',
+                    denyButtonText: 'No thanks...'
+                  }).then(async (result) => {
+                    if (result.isConfirmed) {
+                      contract(wallet).safeTransferFrom(owner, result.value, name).catch((e) => {
+                        console.error(e);
+                      });
+                    }
+                  });}} side><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: `22px` }}>Transfer</p></ActionButtonAgain>}
+                </MoreWrapperSideBar>
+              </Stack>
+              <Stack direction="column">
+                <Stack direction="row" style={{ justifyContent: 'center' }}>
+                  <ActionButtonAgain tab onClick={() => setTab(0)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px' }}>Details</p></ActionButtonAgain>
+                  <Tooltip title="Set records"><ActionButtonAgain tab onClick={() => setTab(1)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Records</p></ActionButtonAgain></Tooltip>
+                  <Tooltip title={(tokenId === -1) ? "Token ID not fetched" : "Sell on PaintSwap"}><a href={`https://paintswap.finance/marketplace/assets/0x14ffd1fa75491595c6fd22de8218738525892101/${tokenId}`} style={{ textDecoration: 'none' }}><ActionButtonAgain tab><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Sell</p></ActionButtonAgain></a></Tooltip>
+                </Stack>
+                <DetailsWrapper>
+                  <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm's records</Header>
+                  <Stack direction="row">
+                    <MoreWrapper width="70vw" height="28vw">
+                      <Records name={name as string} isOwner={isOwner} contract={external(wallet)} />
+                    </MoreWrapper>
+                  </Stack>
+                </DetailsWrapper>
+              </Stack>
+            </Stack> : <Stack direction="row"><Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', width: '50%' }}>{name}.ftm Loading...</Header><Skeleton animation='wave' variant="rounded" width='100%' height='100%' /></Stack>}
+          </Wrapper>
+        </Stack>
+      </walletContext.Provider>
+    )
+  }
 
   return (
     <walletContext.Provider value={{
@@ -241,7 +326,7 @@ function App() {
             <Stack direction="column">
               <Stack direction="row" style={{ justifyContent: 'center' }}>
                 <ActionButtonAgain tab onClick={() => setTab(0)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px' }}>Details</p></ActionButtonAgain>
-                <Tooltip title="Soon!"><ActionButtonAgain tab onClick={() => setTab(1)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Records</p></ActionButtonAgain></Tooltip>
+                <Tooltip title="Set records"><ActionButtonAgain tab onClick={() => setTab(1)}><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Records</p></ActionButtonAgain></Tooltip>
                 <Tooltip title={(tokenId === -1) ? "Token ID not fetched" : "Sell on PaintSwap"}><a href={`https://paintswap.finance/marketplace/assets/0x14ffd1fa75491595c6fd22de8218738525892101/${tokenId}`} style={{ textDecoration: 'none' }}><ActionButtonAgain tab><p style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display', fontSize: '11px'}}>Sell</p></ActionButtonAgain></a></Tooltip>
               </Stack>
               <DetailsWrapper>
