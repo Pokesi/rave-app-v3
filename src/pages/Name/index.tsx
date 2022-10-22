@@ -213,7 +213,7 @@ function App() {
                 <div>
                   <ActionButton
                     onClick={(!owned) ? (() => {
-                      (new Rave()).registerName(name, wallet, { value: ethers.utils.parseEther('5') })
+                      (contract(wallet))).registerName(name, { value: ethers.utils.parseEther('5') })
                     }) : (() => {
                       //
                     })}
