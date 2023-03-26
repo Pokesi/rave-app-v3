@@ -257,7 +257,7 @@ function App() {
                   <Header style={{ color: '#0FFFF0', fontFamily: 'Red Hat Display' }}>{name}.ftm's records</Header>
                   <Stack direction="row">
                     <MoreWrapper width="70vw" height="28vw">
-                      <Records name={name as string} isOwner={isOwner} contract={external(wallet)} />
+                      <Records name={`${name as string}.ftm`} isOwner={isOwner} contract={external(wallet)} />
                     </MoreWrapper>
                   </Stack>
                 </DetailsWrapper>
